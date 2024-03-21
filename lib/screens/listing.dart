@@ -1,7 +1,9 @@
 import 'package:event_explorer/bloc/event_bloc.dart';
 import 'package:event_explorer/bloc/event_event.dart';
+import 'package:event_explorer/widgets.dart/shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../bloc/event_state.dart';
 import '../models/category.dart';
@@ -47,7 +49,9 @@ class _ListingScreenState extends State<ListingScreen> {
         bloc: eventBloc,
         builder: (context, state) {
           if (state is EventLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return _isListView
+                ? _buildListViewShimmer()
+                : _buildGridViewShimmer();
           } else if (state is EventLoaded) {
             Event _event = state.events;
 
@@ -93,6 +97,133 @@ class _ListingScreenState extends State<ListingScreen> {
         final Item item = items[index];
         return EventCard(item: item);
       },
+    );
+  }
+
+  Widget _buildListViewShimmer() {
+    return ListView.separated(
+      separatorBuilder: (context, index) {
+        return Container(
+          height: 10,
+        );
+      },
+      itemCount: 5, // Number of shimmer items to show
+      itemBuilder: (context, index) {
+        return const ShimmerLoading(
+          child:
+              EventCardShimmer(), // Replace EventCardShimmer with your shimmer version of EventCard
+        );
+      },
+    );
+  }
+
+  Widget _buildGridViewShimmer() {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 0.75, // Adjust as needed
+      ),
+      itemCount: 6, // Number of shimmer items to show
+      itemBuilder: (context, index) {
+        return const ShimmerLoading(
+          child:
+              EventCardShimmer(), // Replace EventCardShimmer with your shimmer version of EventCard
+        );
+      },
+    );
+  }
+}
+
+class EventCardShimmer extends StatelessWidget {
+  const EventCardShimmer({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 150,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20.0)),
+            ),
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[400]!,
+              highlightColor: Colors.grey[300]!,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20.0)),
+                      color: Colors.white,
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    right: 8,
+                    bottom: 8,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20.0)),
+                        color: Colors.grey[200],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    height: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    height: 16,
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    height: 16,
+                    width: MediaQuery.of(context).size.width * 0.4,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

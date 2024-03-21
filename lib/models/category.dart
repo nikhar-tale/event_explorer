@@ -1,3 +1,5 @@
+import 'package:event_explorer/utils/utils.dart';
+
 class Category {
   String? category;
   String? data;
@@ -5,7 +7,7 @@ class Category {
   Category({this.category, this.data});
 
   Category.fromJson(Map<String, dynamic> json) {
-    category = json['category'];
+    category = Utils.capitalizeFirstLetter(json['category']);
     data = json['data'];
   }
 

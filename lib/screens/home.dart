@@ -99,8 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  _capitalizeFirstLetter(
-                      category.category ?? 'Unknown Category'),
+                  category.category ?? 'Unknown Category',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
