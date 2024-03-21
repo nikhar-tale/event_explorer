@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 class Utils {
+  // static bool isListView = true;
+  static ValueNotifier<bool> isListView = ValueNotifier<bool>(true);
+
   static String capitalizeFirstLetter(String input) {
     if (input.isEmpty) {
       return input;

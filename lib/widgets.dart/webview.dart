@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:event_explorer/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -25,7 +26,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (int progress) {
-            if (progress > 10) {
+            if (progress > 10 && isLoading) {
               setState(() {
                 isLoading = false;
               });
@@ -46,11 +47,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.item.eventname ?? '',
-        ),
-      ),
+      appBar: appbar(),
       body: Stack(
         children: [
           WebViewWidget(
@@ -69,5 +66,29 @@ class _WebViewScreenState extends State<WebViewScreen> {
         ],
       ),
     );
+  }
+
+  appbar() {
+    // IconData iconData = Utils.getCategoryIcon(widget.category!.category ?? '');
+    return AppBar(
+        // Set your preferred background color
+        elevation: 4, // Set elevation for a slight shadow
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ), // You can use any icon for your menu
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        title: Text(
+          widget.item.eventname ?? '',
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Colors.white, // Set text color
+          ),
+        ));
   }
 }

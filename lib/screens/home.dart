@@ -24,9 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Access the EventBloc
 
-    // Add FetchEvents event to fetch the events
     eventBloc.add(FetchCategories());
   }
 
@@ -41,13 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, state) {
           if (state is EventLoading) {
             // Display shimmer loading effect
-            return _buildShimmerLoading();
+            return ListView.builder(
+                itemCount: 6,
+                itemBuilder: (context, index) {
+                  return categoryCard(category: Category(), isLoading: true);
+                });
           } else if (state is CategoriesLoaded) {
             return ListView.builder(
               itemCount: state.categories.length,
               itemBuilder: (context, index) {
                 final Category category = state.categories[index];
-                return _buildCategoryCard(category);
+                return categoryCard(
+                  category: category,
+                );
               },
             );
           } else if (state is EventError) {
@@ -68,9 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryCard(Category category) {
-    // Use category name to fetch icon dynamically
-    IconData iconData = Utils.getCategoryIcon(category.category ?? '');
+  Widget categoryCard({Category? category, bool isLoading = false}) {
+    IconData iconData = Utils.getCategoryIcon(category!.category ?? '');
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Card(
@@ -78,71 +82,59 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
-        child: InkWell(
-          onTap: () {
-            // Navigate to events of the selected category
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => ListingScreen(
-                      category: category,
-                    )));
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Colors.blue,
-                  child: Icon(
-                    iconData,
-                    color: Colors.white,
+        child: Hero(
+          transitionOnUserGestures: true,
+          tag: category.category ?? 'Unknown Category',
+          child: GestureDetector(
+            onTap: () {
+              if (isLoading) return;
+              // Navigate to events of the selected category
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ListingScreen(
+                        category: category,
+                      )));
+            }, // No action for shimmer loading
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  ShimmerLoading(
+                    isLoading: isLoading,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.deepPurple,
+                      child: Icon(
+                        iconData,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  category.category ?? 'Unknown Category',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ShimmerLoading(
+                      isLoading: isLoading,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                        ),
+                        height: 24,
+                        child: Text(
+                          category.category ?? 'Unknown Category',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  // Function to build shimmer loading effect
-  Widget _buildShimmerLoading() {
-    return ListView.builder(
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return ShimmerLoading(
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: ListTile(
-              title: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                ),
-                width: double.infinity,
-                height: 24,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  String _capitalizeFirstLetter(String input) {
-    if (input.isEmpty) {
-      return input;
-    }
-    return input.substring(0, 1).toUpperCase() + input.substring(1);
   }
 }

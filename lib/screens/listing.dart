@@ -1,9 +1,10 @@
 import 'package:event_explorer/bloc/event_bloc.dart';
 import 'package:event_explorer/bloc/event_event.dart';
+import 'package:event_explorer/utils/utils.dart';
 import 'package:event_explorer/widgets.dart/shimmer.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../bloc/event_state.dart';
 import '../models/category.dart';
@@ -21,7 +22,9 @@ class ListingScreen extends StatefulWidget {
 
 class _ListingScreenState extends State<ListingScreen> {
   final EventBloc eventBloc = EventBloc();
-  bool _isListView = true; // Track the current view mode
+  ScrollController? listViwController = ScrollController();
+  ScrollController? grideViwController = ScrollController();
+  // Track the current view mode
 
   @override
   void initState() {
@@ -32,32 +35,45 @@ class _ListingScreenState extends State<ListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.category.category ?? ''),
-        actions: [
-          IconButton(
-            icon: Icon(_isListView ? Icons.grid_view : Icons.list),
-            onPressed: () {
-              setState(() {
-                _isListView = !_isListView;
-              });
-            },
-          ),
-        ],
-      ),
+      appBar: appbar(),
       body: BlocBuilder<EventBloc, EventState>(
         bloc: eventBloc,
         builder: (context, state) {
           if (state is EventLoading) {
-            return _isListView
-                ? _buildListViewShimmer()
-                : _buildGridViewShimmer();
-          } else if (state is EventLoaded) {
-            Event _event = state.events;
+            Event event = Event(
+                count: 4,
+                request: Request(),
+                item: [Item(), Item(), Item(), Item()]);
 
-            return _isListView
-                ? _buildListView(_event.item!)
-                : _buildGridView(_event.item!);
+            Widget listview = _buildListView(event: event, isLoading: true);
+            Widget gridview = _buildGridView(event: event, isLoading: true);
+
+            return ValueListenableBuilder<bool>(
+                valueListenable: Utils.isListView,
+                builder: (BuildContext context, bool value, child) {
+                  if (Utils.isListView.value) {
+                    return listview;
+                  }
+                  return gridview;
+                });
+          } else if (state is EventLoaded) {
+            Event event = state.events;
+
+            Widget listview = _buildListView(
+              event: event,
+            );
+            Widget gridview = _buildGridView(
+              event: event,
+            );
+
+            return ValueListenableBuilder<bool>(
+                valueListenable: Utils.isListView,
+                builder: (BuildContext context, bool value, child) {
+                  if (Utils.isListView.value) {
+                    return listview;
+                  }
+                  return gridview;
+                });
           } else if (state is EventError) {
             return Center(child: Text(state.errorMessage));
           } else {
@@ -68,160 +84,182 @@ class _ListingScreenState extends State<ListingScreen> {
     );
   }
 
-  Widget _buildListView(List<Item> items) {
-    return ListView.separated(
-      separatorBuilder: (context, index) {
-        return Container(
-          height: 10,
-        );
-      },
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final Item item = items[index];
-        return EventCard(item: item);
-      },
+  Widget _buildListView({required Event event, bool isLoading = false}) {
+    List<Item> items = event.item ?? [];
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        eventDetails(event: event, isLoading: isLoading),
+        Expanded(
+          child: ListView.separated(
+            controller: listViwController,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            separatorBuilder: (context, index) {
+              return Container(
+                height: 10,
+              );
+            },
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final Item item = items[index];
+              return EventCard(
+                item: item,
+                isLoading: isLoading,
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildGridView(List<Item> items) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.75, // Adjust as needed
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final Item item = items[index];
-        return EventCard(item: item);
-      },
-    );
-  }
-
-  Widget _buildListViewShimmer() {
-    return ListView.separated(
-      separatorBuilder: (context, index) {
-        return Container(
-          height: 10,
-        );
-      },
-      itemCount: 5, // Number of shimmer items to show
-      itemBuilder: (context, index) {
-        return const ShimmerLoading(
-          child:
-              EventCardShimmer(), // Replace EventCardShimmer with your shimmer version of EventCard
-        );
-      },
-    );
-  }
-
-  Widget _buildGridViewShimmer() {
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.75, // Adjust as needed
-      ),
-      itemCount: 6, // Number of shimmer items to show
-      itemBuilder: (context, index) {
-        return const ShimmerLoading(
-          child:
-              EventCardShimmer(), // Replace EventCardShimmer with your shimmer version of EventCard
-        );
-      },
-    );
-  }
-}
-
-class EventCardShimmer extends StatelessWidget {
-  const EventCardShimmer({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20.0)),
+  Widget _buildGridView({required Event event, bool isLoading = false}) {
+    List<Item> items = event.item ?? [];
+    return Column(
+      children: [
+        eventDetails(event: event, isLoading: isLoading),
+        Expanded(
+          child: GridView.builder(
+            controller: grideViwController,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 8,
+              childAspectRatio: 0.60, // Adjust as needed
             ),
-            child: Shimmer.fromColors(
-              baseColor: Colors.grey[400]!,
-              highlightColor: Colors.grey[300]!,
-              child: Stack(
-                fit: StackFit.expand,
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final Item item = items[index];
+              return EventCard(
+                item: item,
+                isLoading: isLoading,
+                gridView: true,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  appbar() {
+    IconData iconData = Utils.getCategoryIcon(widget.category!.category ?? '');
+    return AppBar(
+      // Set your preferred background color
+      elevation: 4, // Set elevation for a slight shadow
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back_ios,
+          color: Colors.white,
+        ), // You can use any icon for your menu
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+      ),
+      titleSpacing: 0,
+      title: Hero(
+        transitionOnUserGestures: true,
+        tag: widget.category.category ?? 'Unknown Category',
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              backgroundColor: const Color.fromARGB(88, 44, 3, 115),
+              child: Icon(
+                iconData,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(
+              width: 5,
+            ),
+            Text(
+              (widget.category.category ?? ''),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white, // Set text color
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        ValueListenableBuilder<bool>(
+            valueListenable: Utils.isListView,
+            builder: (BuildContext context, bool value, child) {
+              return IconButton(
+                icon: Icon(Utils.isListView.value
+                    ? Icons.grid_view_sharp
+                    : Icons.list_rounded),
+                onPressed: () {
+                  Utils.isListView.value = !Utils.isListView.value;
+                },
+              );
+            }),
+      ],
+    );
+  }
+
+  eventDetails({required Event event, bool isLoading = false}) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20.0)),
-                      color: Colors.white,
+                  ShimmerLoading(
+                    isLoading: isLoading,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: Colors.deepPurple,
                     ),
                   ),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    right: 8,
-                    bottom: 8,
+                  const SizedBox(width: 5),
+                  ShimmerLoading(
+                    isLoading: isLoading,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(20.0)),
-                        color: Colors.grey[200],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Events Around ${Utils.capitalizeFirstLetter(event.request!.cityDisplay ?? "")}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
+              ShimmerLoading(
+                isLoading: isLoading,
+                child: SizedBox(
+                  height: 22,
+                  child: CircleAvatar(
+                    backgroundColor: const Color.fromARGB(190, 104, 58, 183),
+                    child: Text(
+                      '${event.count}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
-                  child: Container(
-                    height: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
-                  child: Container(
-                    height: 16,
-                    width: MediaQuery.of(context).size.width * 0.6,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
-                  child: Container(
-                    height: 16,
-                    width: MediaQuery.of(context).size.width * 0.4,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Add more icons and text as needed
         ],
       ),
     );
