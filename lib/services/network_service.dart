@@ -5,16 +5,13 @@ import '../models/network_response.dart';
 
 class NetworkService {
   NetworkService();
-  // "https://allevents.s3.amazonaws.com/tests/categories.json";
-  String baseUrl = "https://allevents.s3.amazonaws.com/tests/";
 
-  Future<dynamic> get(String endpoint) async {
+  Future<dynamic> get(String url) async {
     try {
-
-      String url = "$baseUrl$endpoint.json";
-      print(url);
+      String _url = url;
+      print(_url);
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse(_url),
       );
 
       if (response.statusCode == 200) {

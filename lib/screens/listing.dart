@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/event_state.dart';
 import '../models/category.dart';
+import '../models/event.dart';
+import '../widgets.dart/event_card.dart';
 
 class ListingScreen extends StatefulWidget {
   final Category category;
@@ -17,13 +19,11 @@ class ListingScreen extends StatefulWidget {
 
 class _ListingScreenState extends State<ListingScreen> {
   final EventBloc eventBloc = EventBloc();
+  bool _isListView = true; // Track the current view mode
 
   @override
   void initState() {
     super.initState();
-    // Access the EventBloc
-
-    // Add FetchEvents event to fetch the events for the selected category
     eventBloc.add(FetchEventsByCategory(widget.category));
   }
 
@@ -31,40 +31,68 @@ class _ListingScreenState extends State<ListingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Events in ${widget.category.category}'),
+        title: Text(widget.category.category ?? ''),
+        actions: [
+          IconButton(
+            icon: Icon(_isListView ? Icons.grid_view : Icons.list),
+            onPressed: () {
+              setState(() {
+                _isListView = !_isListView;
+              });
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<EventBloc, EventState>(
         bloc: eventBloc,
         builder: (context, state) {
           if (state is EventLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (state is EventLoaded) {
-            return Text(state.events.request!.category ?? '');
+            Event _event = state.events;
+
+            return _isListView
+                ? _buildListView(_event.item!)
+                : _buildGridView(_event.item!);
           } else if (state is EventError) {
             return Center(child: Text(state.errorMessage));
           } else {
-            return Center(child: Text('Unknown state'));
+            return const Center(child: Text('Unknown state'));
           }
         },
       ),
     );
   }
 
-  // Widget _buildEventList(List<Event> events) {
-  //   // This function builds the list of events based on the current state
-  //   return ListView.builder(
-  //     itemCount: events.length,
-  //     itemBuilder: (context, index) {
-  //       final event = events[index];
-  //       return ListTile(
-  //         title: Text(event.name),
-  //         subtitle: Text(event.date),
-  //         // Navigate to event details screen on tap
-  //         onTap: () {
-  //           // Add navigation logic here
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
+  Widget _buildListView(List<Item> items) {
+    return ListView.separated(
+      separatorBuilder: (context, index) {
+        return Container(
+          height: 10,
+        );
+      },
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final Item item = items[index];
+        return EventCard(item: item);
+      },
+    );
+  }
+
+  Widget _buildGridView(List<Item> items) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(8),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 0.75, // Adjust as needed
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final Item item = items[index];
+        return EventCard(item: item);
+      },
+    );
+  }
 }

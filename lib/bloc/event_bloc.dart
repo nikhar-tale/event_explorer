@@ -40,7 +40,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
   Future<List<Category>> fetchCategories() async {
     try {
       ResponseModel response =
-          await networkService.get(testEnv.testcategoriesEndPoint);
+          await networkService.get(testEnv.testCategoriesURL);
 
       if (response.statusCode == 200) {
         return response.data
@@ -55,7 +55,8 @@ class EventBloc extends Bloc<EventEvent, EventState> {
 
   fetchEventsByCategory(FetchEventsByCategory event) async {
     try {
-      ResponseModel response = await networkService.get('music');
+      String _url = event.category.data!;
+      ResponseModel response = await networkService.get(_url);
 
       if (response.statusCode == 200) {
         return Event.fromJson(response.data);
@@ -63,7 +64,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
       throw (response.statusCode);
     } catch (e) {
       print(e);
-      throw (e);
+      rethrow;
     }
   }
 }
