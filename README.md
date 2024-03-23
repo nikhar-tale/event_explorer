@@ -1,16 +1,17 @@
-# event_explorer
+# Event Explorer
 
-A new Flutter project.
+Welcome to Event Explorer, a mobile app designed to help users discover and explore various events effortlessly. This app is built using Flutter, providing a smooth and responsive user experience across different devices. Event Explorer follows the MVVM (Model-View-ViewModel) architecture and utilizes the BloC package for efficient state management.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Google Sign-In**: Users can log in to the app using their Google accounts, ensuring a seamless authentication process.
+- **Event Discovery**: Explore a wide range of events categorized by different topics, making it easy to find events of interest.
+- **Event Details**: View detailed information about each event, including date, time, location, and description.
+- **User Profile**: Manage user profiles, including profile pictures and other details.
 
-A few resources to get you started if this is your first Flutter project:
+## Installation
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. **Clone the repository:**
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+   ```bash
+   git clone https://github.com/nikhar-tale/event_explorer.git
