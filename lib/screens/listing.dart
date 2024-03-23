@@ -20,11 +20,17 @@ class ListingScreen extends StatefulWidget {
   State<ListingScreen> createState() => _ListingScreenState();
 }
 
-class _ListingScreenState extends State<ListingScreen> {
+class _ListingScreenState extends State<ListingScreen>
+    with SingleTickerProviderStateMixin {
   final EventBloc eventBloc = EventBloc();
-  ScrollController? listViwController = ScrollController();
-  ScrollController? grideViwController = ScrollController();
+  final EventBloc searchBloc = EventBloc();
+  // ScrollController? listViwController = ScrollController();
+  // ScrollController? grideViwController = ScrollController();
   // Track the current view mode
+  TextEditingController controller = TextEditingController();
+
+  Event localEvent = Event();
+  static ValueNotifier<bool> isSearch = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -34,52 +40,70 @@ class _ListingScreenState extends State<ListingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appbar(),
-      body: BlocBuilder<EventBloc, EventState>(
-        bloc: eventBloc,
-        builder: (context, state) {
-          if (state is EventLoading) {
-            Event event = Event(
-                count: 4,
-                request: Request(),
-                item: [Item(), Item(), Item(), Item()]);
+    return SafeArea(
+      child: Scaffold(
+        // appBar: appbar(),
+        body: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[appbar(innerBoxIsScrolled: innerBoxIsScrolled)];
+          },
+          body: ValueListenableBuilder<bool>(
+              valueListenable: isSearch,
+              builder: (BuildContext context, bool value, child) {
+                return BlocBuilder<EventBloc, EventState>(
+                  bloc: isSearch.value ? searchBloc : eventBloc,
+                  // listener: (context, state) {
+                  //   if (state is EventLoaded && state.isSearch == false) {
+                  //     localEvent = state.events;
+                  //   }
+                  // },
+                  builder: (context, state) {
+                    if (state is EventLoading) {
+                      Event event = Event(
+                          count: 4,
+                          request: Request(),
+                          item: [Item(), Item(), Item(), Item()]);
 
-            Widget listview = _buildListView(event: event, isLoading: true);
-            Widget gridview = _buildGridView(event: event, isLoading: true);
+                      Widget listview =
+                          _buildListView(event: event, isLoading: true);
+                      Widget gridview =
+                          _buildGridView(event: event, isLoading: true);
 
-            return ValueListenableBuilder<bool>(
-                valueListenable: Utils.isListView,
-                builder: (BuildContext context, bool value, child) {
-                  if (Utils.isListView.value) {
-                    return listview;
-                  }
-                  return gridview;
-                });
-          } else if (state is EventLoaded) {
-            Event event = state.events;
+                      return ValueListenableBuilder<bool>(
+                          valueListenable: Utils.isListView,
+                          builder: (BuildContext context, bool value, child) {
+                            if (Utils.isListView.value) {
+                              return listview;
+                            }
+                            return gridview;
+                          });
+                    } else if (state is EventLoaded) {
+                      Event event = state.events;
 
-            Widget listview = _buildListView(
-              event: event,
-            );
-            Widget gridview = _buildGridView(
-              event: event,
-            );
+                      Widget listview = _buildListView(
+                        event: event,
+                      );
+                      Widget gridview = _buildGridView(
+                        event: event,
+                      );
 
-            return ValueListenableBuilder<bool>(
-                valueListenable: Utils.isListView,
-                builder: (BuildContext context, bool value, child) {
-                  if (Utils.isListView.value) {
-                    return listview;
-                  }
-                  return gridview;
-                });
-          } else if (state is EventError) {
-            return Center(child: Text(state.errorMessage));
-          } else {
-            return const Center(child: Text('Unknown state'));
-          }
-        },
+                      return ValueListenableBuilder<bool>(
+                          valueListenable: Utils.isListView,
+                          builder: (BuildContext context, bool value, child) {
+                            if (Utils.isListView.value) {
+                              return listview;
+                            }
+                            return gridview;
+                          });
+                    } else if (state is EventError) {
+                      return Center(child: Text(state.errorMessage));
+                    } else {
+                      return const Center(child: Text('Unknown state'));
+                    }
+                  },
+                );
+              }),
+        ),
       ),
     );
   }
@@ -92,23 +116,32 @@ class _ListingScreenState extends State<ListingScreen> {
       children: [
         eventDetails(event: event, isLoading: isLoading),
         Expanded(
-          child: ListView.separated(
-            controller: listViwController,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            separatorBuilder: (context, index) {
-              return Container(
-                height: 10,
-              );
-            },
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final Item item = items[index];
-              return EventCard(
-                item: item,
-                isLoading: isLoading,
-              );
-            },
-          ),
+          child: items.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No Events Found!',
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  // controller: listViwController,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  separatorBuilder: (context, index) {
+                    return Container(
+                      height: 10,
+                    );
+                  },
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final Item item = items[index];
+                    return EventCard(
+                      item: item,
+                      isLoading: isLoading,
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -120,85 +153,155 @@ class _ListingScreenState extends State<ListingScreen> {
       children: [
         eventDetails(event: event, isLoading: isLoading),
         Expanded(
-          child: GridView.builder(
-            controller: grideViwController,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 5,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.60, // Adjust as needed
-            ),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final Item item = items[index];
-              return EventCard(
-                item: item,
-                isLoading: isLoading,
-                gridView: true,
-              );
-            },
-          ),
+          child: items.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No Events Found!',
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                )
+              : GridView.builder(
+                  // controller: grideViwController,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:
+                        MediaQuery.of(context).size.width > 600 ? 4 : 2,
+                    crossAxisSpacing: 2,
+                    mainAxisSpacing: 5,
+                    childAspectRatio: 0.68,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final Item item = items[index];
+                    return EventCard(
+                      item: item,
+                      isLoading: isLoading,
+                      gridView: true,
+                    );
+                  },
+                ),
         ),
       ],
     );
   }
 
-  appbar() {
+  appbar({bool innerBoxIsScrolled = false}) {
     IconData iconData = Utils.getCategoryIcon(widget.category!.category ?? '');
-    return AppBar(
-      // Set your preferred background color
-      elevation: 4, // Set elevation for a slight shadow
+
+    return SliverAppBar(
+      // expandedHeight: 120,
+      // bottom: PreferredSize(
+      //   preferredSize: const Size.fromHeight(68),
+      //   child: Container(
+      //     margin: const EdgeInsets.symmetric(vertical: 10),
+      //     padding: const EdgeInsets.symmetric(horizontal: 10),
+      //     child: Row(
+      //       children: [
+      //         Expanded(
+      //           child: Padding(
+      //             padding: const EdgeInsets.only(left: 50, right: 30),
+      //             child: TextField(
+      //               controller: controller,
+      //               onChanged: onSearchTextChanged,
+      //               decoration: InputDecoration(
+      //                 hintText: 'Search',
+      //                 border: OutlineInputBorder(
+      //                   borderRadius: BorderRadius.circular(25),
+      //                   borderSide: BorderSide.none,
+      //                 ),
+      //                 filled: true,
+      //                 fillColor: Colors.white,
+      //                 prefixIcon: const Icon(Icons.search),
+      //                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
+      //                 suffixIcon: IconButton(
+      //                   icon: const Icon(Icons.location_on),
+      //                   onPressed: () {
+      //                     // Add your action here
+      //                   },
+      //                 ),
+      //               ),
+      //             ),
+      //           ),
+      //         ),
+      //         ValueListenableBuilder<bool>(
+      //           valueListenable: Utils.isListView,
+      //           builder: (BuildContext context, bool value, child) {
+      //             return IconButton(
+      //               icon: Icon(
+      //                 Utils.isListView.value
+      //                     ? Icons.grid_view_sharp
+      //                     : Icons.list_rounded,
+      //                 color: Colors.white,
+      //               ),
+      //               onPressed: () {
+      //                 Utils.isListView.value = !Utils.isListView.value;
+      //               },
+      //             );
+      //           },
+      //         ),
+      //       ],
+      //     ),
+      //   ),
+      // ),
+      pinned: false,
+      floating: false,
+      elevation: 4,
       leading: IconButton(
         icon: const Icon(
           Icons.arrow_back_ios,
           color: Colors.white,
-        ), // You can use any icon for your menu
+        ),
         onPressed: () {
           Navigator.of(context).pop();
         },
       ),
       titleSpacing: 0,
-      title: Hero(
-        transitionOnUserGestures: true,
-        tag: widget.category.category ?? 'Unknown Category',
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            CircleAvatar(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Hero(
+            transitionOnUserGestures: true,
+            tag: widget.category.category ?? 'Unknown Category',
+            child: CircleAvatar(
               backgroundColor: const Color.fromARGB(88, 44, 3, 115),
               child: Icon(
                 iconData,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(
-              width: 5,
+          ),
+          const SizedBox(
+            width: 5,
+          ),
+          Text(
+            (widget.category.category ?? ''),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            Text(
-              (widget.category.category ?? ''),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white, // Set text color
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
       actions: [
         ValueListenableBuilder<bool>(
-            valueListenable: Utils.isListView,
-            builder: (BuildContext context, bool value, child) {
-              return IconButton(
-                icon: Icon(Utils.isListView.value
+          valueListenable: Utils.isListView,
+          builder: (BuildContext context, bool value, child) {
+            return IconButton(
+              icon: Icon(
+                Utils.isListView.value
                     ? Icons.grid_view_sharp
-                    : Icons.list_rounded),
-                onPressed: () {
-                  Utils.isListView.value = !Utils.isListView.value;
-                },
-              );
-            }),
+                    : Icons.list_rounded,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Utils.isListView.value = !Utils.isListView.value;
+              },
+            );
+          },
+        ),
       ],
     );
   }
@@ -229,7 +332,7 @@ class _ListingScreenState extends State<ListingScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Events Around ${Utils.capitalizeFirstLetter(event.request!.cityDisplay ?? "")}',
+                        'Events in ${Utils.capitalizeFirstLetter(event.request!.cityDisplay ?? "")}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -263,5 +366,14 @@ class _ListingScreenState extends State<ListingScreen> {
         ],
       ),
     );
+  }
+
+  void onSearchTextChanged(String value) {
+    if (value == null || value.isEmpty) {
+      isSearch.value = false;
+      return;
+    }
+    searchBloc.add(EventSearch(localEvent, value));
+    isSearch.value = true;
   }
 }

@@ -9,7 +9,7 @@ class NetworkService {
   Future<dynamic> get(String url) async {
     try {
       String _url = url;
-      print(_url);
+
       final response = await http.get(
         Uri.parse(_url),
       );

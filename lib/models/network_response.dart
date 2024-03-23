@@ -1,6 +1,4 @@
-import 'package:equatable/equatable.dart';
-
-class ResponseModel extends Equatable {
+class ResponseModel {
   // ignore: prefer_typing_uninitialized_variables
   final statusCode;
   final data;

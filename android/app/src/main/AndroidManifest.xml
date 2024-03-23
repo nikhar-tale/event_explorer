@@ -2,7 +2,7 @@
     package="com.example.event_explorer">
    <uses-permission android:name="android.permission.INTERNET"/>
    <application
-        android:label="event_explorer"
+        android:label="Event Explore"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
