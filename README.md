@@ -1,17 +1,20 @@
 # Event Explorer
 
-Welcome to Event Explorer, a mobile app designed to help users discover and explore various events effortlessly. This app is built using Flutter, providing a smooth and responsive user experience across different devices. Event Explorer follows the MVVM (Model-View-ViewModel) architecture and utilizes the BloC package for efficient state management.
+Eve explore and discovernt Explorer is a cross-platform mobile app built using Flutter that allows users to events across various categories. The app features mandatory Google login for authentication and provides a seamless user experience with responsive and mobile-friendly views.
 
 ## Features
 
-- **Google Sign-In**: Users can log in to the app using their Google accounts, ensuring a seamless authentication process.
-- **Event Discovery**: Explore a wide range of events categorized by different topics, making it easy to find events of interest.
-- **Event Details**: View detailed information about each event, including date, time, location, and description.
-- **User Profile**: Manage user profiles, including profile pictures and other details.
+- **Google Social Login**: Users must log in with their Google accounts to access the app securely.
+- **Event Categories**: The Home Screen displays a menu of event categories fetched from an API.
+- **Listing Screen**: Users can view events from the selected category, with options to toggle between List view and Grid view.
+- **Remote Data Fetching**: The app makes remote requests to fetch event data from an API.
+- **WebView Integration**: Tapping on an event item opens its "event_url" in a WebView within the app.
+- **MVVM Architecture**: The app follows the MVVM (Model-View-ViewModel) architecture for organized code structure and separation of concerns.
+- **Bloc State Management**: BloC package is used for efficient state management, ensuring a smooth user experience.
 
 ## Installation
 
-1. **Clone the repository:**
+1. Clone the repository to your local machine:
 
-   ```bash
-   git clone https://github.com/nikhar-tale/event_explorer.git
+```bash
+git clone https://github.com/nikhar-tale/event_explorer.git
