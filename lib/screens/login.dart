@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 );
               },
               child: const Text(
-                'Welcome to Event Explore',
+                'Welcome to Event Explorer',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,

@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final EventBloc eventBloc = EventBloc();
 
   String sectionTitle = 'Categories';
-  String title = 'Event Explore';
+  String title = 'Event Explorer';
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? user;
   @override
