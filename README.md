@@ -8,9 +8,9 @@ Eve explore and discovernt Explorer is a cross-platform mobile app built using F
 - **Event Categories**: The Home Screen displays a menu of event categories fetched from an API.
 - **Listing Screen**: Users can view events from the selected category, with options to toggle between List view and Grid view.
 - **Remote Data Fetching**: The app makes remote requests to fetch event data from an API.
-- **WebView Integration**: Tapping on an event item opens its "event_url" in a WebView within the app.
+- **WebView Integration**: Tapping on an event item opens its event url in a WebView within the app.
 - **MVVM Architecture**: The app follows the MVVM (Model-View-ViewModel) architecture for organized code structure and separation of concerns.
-- **Bloc State Management**: BloC package is used for efficient state management, ensuring a smooth user experience.
+- **Bloc State Management**: The BloC package is used for efficient state management, ensuring a smooth user experience.
 
 ## Installation
 
